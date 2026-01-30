@@ -1,5 +1,11 @@
 #include "minitalk.h"
 
+void	ft_putnbr(int nb);
+void	ft_putnbr(int nb);
+
+
+
+
 void handler(int sig, siginfo_t *info, void *context)
 {
     static int  bit = 0;
@@ -28,16 +34,9 @@ void print_pid(void)
     int  i = 11;
     pid_t pid = getpid();
 
-    buf[i--] = '\n';
-    if (pid == 0)
-        buf[i--] = '0';
-    while (pid > 0)
-    {
-        buf[i--] = (pid % 10) + '0';
-        pid /= 10;
-    }
     write(1, "PID: ", 5);
-    write(1, &buf[i + 1], 11 - i);
+    ft_putnbr(pid);
+    write(1, "\n", 1);
 }
 
 int main(void)
@@ -52,4 +51,25 @@ int main(void)
     sigaction(SIGUSR2, &sa, NULL);
     while (1)
         pause();
+}
+
+
+void	ft_putchar(char c)
+{
+	write (1, &c, 1);
+}
+
+void	ft_putnbr(int nb)
+{
+	if (nb < 0)
+	{
+		nb = -nb;
+	}
+	if (nb >= 10)
+	{
+		ft_putnbr(nb / 10);
+		ft_putnbr(nb % 10);
+	}
+	else
+		ft_putchar(nb + '0');
 }
