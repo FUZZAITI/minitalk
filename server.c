@@ -19,7 +19,7 @@ void handler(int sig, siginfo_t *info, void *context)
         bit = 0;
         c = 0;
     }
-    kill(info->si_pid, SIGUSR1); // ACK
+    kill(info->si_pid, SIGUSR1); 
 }
 
 void print_pid(void)
