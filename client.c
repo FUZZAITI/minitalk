@@ -1,54 +1,64 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   client.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pepinhei <pepinhei@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/31 11:25:48 by pepinhei          #+#    #+#             */
+/*   Updated: 2026/01/31 11:47:06 by pepinhei         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minitalk.h"
 
-static int g_ack = 0;
+static int	g_ack = 0;
 static int	ft_atoi(char *str);
 
-void ack_handler(int sig)
+void	ack_handler(int sig)
 {
-    (void)sig;
-    g_ack = 1;
+	(void)sig;
+	g_ack = 1;
 }
 
-void send_bit(pid_t pid, int bit)
+void	send_bit(pid_t pid, int bit)
 {
-    g_ack = 0;
-    if (bit)
-        kill(pid, SIGUSR2);
-    else
-        kill(pid, SIGUSR1);
-    while (!g_ack)
-        pause();
+	g_ack = 0;
+	if (bit)
+		kill(pid, SIGUSR2);
+	else
+		kill(pid, SIGUSR1);
+	while (!g_ack)
+		pause();
 }
 
-void send_char(pid_t pid, unsigned char c)
+void	send_char(pid_t pid, unsigned char c)
 {
-    int bit = 7;
+	int	bit;
 
-    while (bit >= 0)
-        send_bit(pid, (c >> bit--) & 1);
+	bit = 7;
+	while (bit >= 0)
+		send_bit(pid, (c >> bit--) & 1);
 }
 
-int main(int argc, char **argv)
+int	main(int argc, char **argv)
 {
-    pid_t pid;
-    int   i;
-    struct sigaction sa;
+	pid_t				pid;
+	int					i;
+	struct sigaction	sa;
 
-    if (argc != 3)
-        return (write(1, "Uso: ./client <PID> <msg>\n", 26), 1);
-
-    pid = (pid_t)ft_atoi(argv[1]);
-    sa.sa_handler = ack_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-    sigaction(SIGUSR1, &sa, NULL);
-
-    i = 0;
-    while (argv[2][i])
-        send_char(pid, argv[2][i++]);
-    send_char(pid, '\0');
+	if (argc != 3)
+		return (write(1, "Uso: ./client <PID> <msg>\n", 26), 1);
+	pid = (pid_t)ft_atoi(argv[1]);
+	sa.sa_handler = ack_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sigaction(SIGUSR1, &sa, NULL);
+	i = 0;
+	while (argv[2][i])
+		send_char(pid, argv[2][i++]);
+	send_char(pid, '\0');
 }
-
 
 static int	ft_atoi(char *str)
 {
@@ -59,7 +69,8 @@ static int	ft_atoi(char *str)
 	sum = 0;
 	sign = 1;
 	found = 1;
-	while (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\f' || *str == '\r')
+	while (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\f'
+		|| *str == '\r')
 		str++;
 	if (*str == '-')
 		sign = -1;
