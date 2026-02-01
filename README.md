@@ -1,105 +1,85 @@
-*Este projeto foi criado como parte do curriculo da 42 por sdelmond*
 
-## Descricao
-O `fractol` e um pequeno explorador de fractais usando a MiniLibX. Ele renderiza os conjuntos de Mandelbrot e Julia, permitindo aproximar/afastar com a roda do mouse e testar diferentes parametros para o Julia via linha de comando.
+*Este projeto foi criado como parte do currículo da 42 por Pepinhei.*
 
-## 1. A Matemática
+# Minitalk
 
-Assim como Mandelbrot, o conjunto de Julia também é um conjunto de **números complexos** gerado por uma fórmula de iteração. A fórmula é idêntica:
+## Descrição
+O **Minitalk** é um projeto de comunicação entre processos (IPC - Inter-Process Communication) desenvolvido no ambiente UNIX. O objetivo central é criar um sistema de troca de mensagens entre um programa **cliente** e um **servidor** utilizando exclusivamente sinais UNIX (`SIGUSR1` e `SIGUSR2`).
 
-- `Z_{n+1} = Z_n^2 + C`
+O projeto desafia o estudante a manipular operações bit-a-bit (bitwise operations) para transmitir dados de forma serializada, garantindo a integridade da mensagem e a sincronização entre os dois processos distintos.
 
-A diferença crucial está em como `Z` e `C` são definidos:
+## Instruções
 
-- **Para Mandelbrot**:
-    - `Z` sempre começa em `0` (`Z_0 = 0`).
-    - `C` é o número complexo correspondente à coordenada `(x, y)` de **cada pixel**.
+### Compilação
+O projeto utiliza um `Makefile` para gerenciar a compilação. Para gerar os executáveis, utilize os comandos abaixo:
 
-- **Para Julia**:
-    - `C` é um **número complexo constante** para a imagem inteira. Ele não muda de pixel para pixel. Esse `C` é o que define "qual" conjunto de Julia estamos vendo.
-    - `Z` começa com o valor do número complexo correspondente à coordenada `(x, y)` de **cada pixel**.
+```bash
+# Compila o cliente e o servidor
+make
 
-Em resumo:
-- No Mandelbrot, você testa muitos `C`s e começa `Z` do zero.
-- No Julia, você escolhe **um** `C` e testa muitos `Z`s iniciais.
+Como Executar
+Inicie o servidor:
 
-**A condição de escape** é a mesma: se em algum momento o módulo de `Z` (`|Z|`) exceder 2, o ponto é considerado fora do conjunto.
+Bash
+./server
+O servidor será iniciado e exibirá seu PID (Process ID). Mantenha este terminal aberto.
 
-# Teste de Mesa Visual: Fractal de Julia
+Inicie o cliente em outro terminal:
 
-Este documento demonstra o algoritmo do "tempo de escape" do Julia em ação. Usaremos uma constante `C` e dois pontos `Z` iniciais diferentes para ver como a sequência se comporta.
+Bash
+./client [PID_DO_SERVIDOR] "Sua mensagem aqui"
+Substitua [PID_DO_SERVIDOR] pelo número exibido no passo anterior.
 
--   **Constante `C` escolhida:** `C = -0.8 (cr) + 0.156 (ci)`
--   **`max_iter` (máximo de iterações):** `10` para simplificar.
+Recursos
+Referências Relacionadas
+Man signal (7): Visão geral sobre sinais no Linux.
 
-A fórmula-chave é a mesma do Mandelbrot: `Z_{n+1} = Z_n^2 + C`. A diferença é que `C` é fixo e `Z` começa no ponto do pixel.
+struct sigaction {
+               void (*sa_handler)(int);
+               void (*sa_sigaction)(int, siginfo_t *, void *);
+               sigset_t sa_mask;
+               int sa_flags;
+           };
 
-**Condição de escape:** `zr^2 + zi^2 > 4`
+Man sigaction (2): Documentação sobre o tratamento avançado de sinais.
 
----
+Beej's Guide to Unix IPC: Guia clássico sobre comunicação entre processos.
 
-## Exemplo 1: Um Ponto DENTRO do Conjunto (Provavelmente)
+Bitwise Operations em C: Tutorial sobre manipulação de bits.
 
-Vamos testar um ponto `Z` inicial que está próximo da origem.
-- **`Z_0 = 0.2 (zr) + 0.1 (zi)`**
+Uso de Inteligência Artificial
+Neste projeto, a IA (Gemini 2.0 Flash) foi utilizada para as seguintes tarefas:
 
-**Objetivo:** Ver se o valor de `Z` permanece pequeno e não "escapa".
+Estruturação de Documentação: Organização e formatação deste arquivo README conforme as diretrizes da 42.
 
-**Tabela de Iterações:** (`cr` = -0.8, `ci` = 0.156)
+Revisão de Lógica: Auxílio na compreensão teórica do funcionamento dos sinais SIGUSR1 e SIGUSR2 para transmissão binária.
 
-| Iteração (i) | `zr` (inicial) | `zi` (inicial) | `zr_new = zr²-zi²+cr` | `zi_new = 2*zr*zi+ci` | `zr²+zi² > 4`? | `Z` (final) |
-|:------------:|:--------------:|:--------------:|:-------------------------:|:-----------------------:|:---------------:|:----------------------:|
-| **0** | `0.2` | `0.1` | 0.2²-0.1²-0.8 = **-0.77** | 2*(0.2*0.1)+0.156 = **0.196** | `0.2²+0.1²=0.05`. Não. | `(-0.77, 0.196)` |
-| **1** | `-0.77` | `0.196` | (-0.77)²-0.196²-0.8 = **-0.245** | 2*(-0.77)*0.196+0.156 = **-0.146**| `(-0.77)²+0.196²=0.63`. Não.| `(-0.245, -0.146)`|
-| **2** | `-0.245`| `-0.146`| (-0.245)²-(-0.146)²-0.8 = **-0.761**| 2*(-0.245)*(-0.146)+0.156 = **0.227**| `(-0.245)²+(-0.146)²=0.08`.Não| `(-0.761, 0.227)`|
-| **...** | ... | ... | ... | ... | ... | ... |
-| **9** | ... | ... | (continua pequeno) | (continua pequeno) | Não. | ... |
-| **10**| ... | ... | (loop termina) | (loop termina) | Não. | ... |
+Refinamento de Código: Sugestão de boas práticas para garantir que o código fosse resiliente a race conditions leves durante o recebimento de bits.
 
-**Conclusão para o Ponto 1:**
-A condição de escape nunca foi atingida. O loop completou as `10` iterações. A função `julia_iters` retornaria `10`. O programa colore este pixel com a cor "interior" (geralmente preto).
+Escolhas Técnicas
+Protocolo Binário: Utilizei o sinal SIGUSR1 para representar o bit 0 e o SIGUSR2 para o bit 1.
 
----
+Manipulação de Caracteres: A mensagem é decomposta em 8 bits por caractere, enviados do bit mais significativo (MSB) para o menos significativo (LSB).
 
-## Exemplo 2: Um Ponto FORA do Conjunto
+Sincronização: (Se você implementou o bônus) Foi implementado um sistema de handshake onde o servidor confirma o recebimento de cada bit antes de o cliente enviar o próximo, evitando a perda de dados.
 
-Agora, vamos testar um ponto `Z` inicial mais distante.
-- **`Z_0 = 1.5 (zr) + 1.5 (zi)`**
-
-**Objetivo:** Ver como e quando o valor de `Z` "escapa" (cresce rapidamente).
-
-**Tabela de Iterações:** (`cr` = -0.8, `ci` = 0.156)
-
-| Iteração (i) | `zr` (inicial) | `zi` (inicial) | `zr_new = zr²-zi²+cr` | `zi_new = 2*zr*zi+ci` | `zr²+zi² > 4`? | `Z` (final) |
-|:------------:|:--------------:|:--------------:|:-------------------------:|:-----------------------:|:----------------:|:--------------------:|
-| **0** | `1.5` | `1.5` | 1.5²-1.5²-0.8 = **-0.8** | 2*(1.5*1.5)+0.156 = **4.656** | `1.5²+1.5²=4.5`. **SIM!**| `(-0.8, 4.656)` |
-
-**Conclusão para o Ponto 2:**
-Já na **primeira verificação** (iteração `i = 0`), o valor de `|Z|^2` era `4.5`, que é maior que `4`. A condição de escape foi atingida imediatamente. O loop é interrompido (`break`).
-
-A função `julia_iters` retornaria o valor atual de `i`, que é `0`. O programa usa esse valor para escolher uma cor, indicando que o ponto está fora do conjunto e escapou muito rapidamente.
-
----
-## Instrucoes
-### Compilar
-- `make`
-
-### Executar
-- Mandelbrot: `./fractol mandelbrot`
-- Julia (padrao): `./fractol julia`
-- Julia com parametros: `./fractol julia <re> <im>`
-  - Exemplo: `./fractol julia -0.7 0.2701`
-
-### Limpar
-- `make clean` (objetos)
-- `make fclean` (objetos + binario)
-- `make re` (recompila tudo)
-
+Markdown
 ## Recursos
-- Wikipedia: Fractal - https://en.wikipedia.org/wiki/Fractal
-- Wikipedia: Mandelbrot set - https://en.wikipedia.org/wiki/Mandelbrot_set
-- Wikipedia: Julia set - https://en.wikipedia.org/wiki/Julia_set
-- Documentacao MiniLibX (Linux): [minilibx-linux/README.md](minilibx-linux/README.md)
 
-### Uso de IA
-- Foi usada IA (GitHub Copilot/Chat) para: revisar requisitos do subject, apontar itens de conformidade (README/nome do binario/hooks) e sugerir ajustes pontuais (expose hook, cleanup no Linux).
+### Referências Relacionadas
+* [Man sigaction (2)](https://man7.org/linux/man-pages/man2/sigaction.2.html): Documentação oficial sobre o tratamento de sinais com sigaction.
+* [Unix Signal Handling](https://www.gnu.org/software/libc/manual/html_node/Signal-Handling.html): Guia da GNU C Library sobre sinais.
+
+### Uso de Inteligência Artificial
+Neste projeto, a IA (Gemini) foi utilizada para:
+* **Estruturação de Documentação:** Organização e formatação deste arquivo README.
+* **Explicação Técnica:** Detalhamento do funcionamento da `struct sigaction` e das flags `sa_sigaction` e `sa_mask`.
+* **Depuração:** Auxílio na identificação de problemas de concorrência e recepção de sinais em alta velocidade.
+
+## Escolhas Técnicas
+
+### Manipulação de Sinais com `sigaction`
+Em vez da função simplificada `signal`, utilizei a `struct sigaction` pelos seguintes motivos:
+* **Acesso ao PID do Remetente:** Ao configurar a flag `SA_SIGINFO`, o servidor ganha acesso à estrutura `siginfo_t`, permitindo identificar exatamente qual PID (o cliente) enviou o sinal. Isso é essencial para o envio de confirmações (handshake).
+* **Bloqueio de Sinais:** O uso de `sa_mask` permite bloquear outros sinais enquanto um sinal está sendo processado, prevenindo condições de corrida (*race conditions*) e corrupção de dados durante a reconstrução dos bits.
+* **Persistência:** Diferente de algumas implementações de `signal`, o `sigaction` não precisa ser reestabelecido após cada sinal recebido.
